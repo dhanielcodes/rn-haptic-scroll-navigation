@@ -66,7 +66,7 @@ export default function HomeScreen() {
         renderItem={({ item, index }) => (
           <TouchableOpacity
             onPress={() => {
-              setActive(index);
+              //  setActive(index);
               Haptics.selectionAsync();
               // scrollToItem(index);
             }}
