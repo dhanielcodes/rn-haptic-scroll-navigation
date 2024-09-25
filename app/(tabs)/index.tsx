@@ -5,7 +5,6 @@ import {
   FlatList,
   TouchableOpacity,
   View,
-  Animated,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
@@ -25,7 +24,7 @@ export default function HomeScreen() {
     "Cafeass",
   ];
 
-  Animated.const[(active, setActive)] = useState(0);
+  const [active, setActive] = useState(0);
   const flatListRef = useRef<FlatList<string>>(null);
 
   /*   const onChange = useRef(({ viewableItems }: any) => {
