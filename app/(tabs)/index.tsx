@@ -5,6 +5,7 @@ import {
   FlatList,
   TouchableOpacity,
   View,
+  Animated,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
@@ -24,22 +25,26 @@ export default function HomeScreen() {
     "Cafeass",
   ];
 
-  const [active, setActive] = useState(0);
+  const [active, setActive] = useState(0); // Track active item
   const flatListRef = useRef<FlatList<string>>(null);
 
-  /*   const onChange = useRef(({ viewableItems }: any) => {
-    if (viewableItems.length > 0) {
-      console.log("Visible items:", viewableItems);
-      const firstViewableItem = viewableItems[0];
-      setActive(firstViewableItem.index);
-      Haptics.selectionAsync();
-    }
-  }).current; */
-  /*   const scrollToItem = (index: number) => {
-    if (flatListRef.current) {
-      flatListRef.current.scrollToIndex({ index, animated: false });
-    }
-  }; */
+  // Store animated values for each item
+  const rotateValues = data.map(() => useRef(new Animated.Value(0)).current);
+
+  // Function to start the rotation when an item is pressed
+  const startRotation = (index: number) => {
+    setActive(index);
+
+    // Reset rotation for the selected item
+    rotateValues[index].setValue(0);
+
+    // Animate rotation
+    Animated.timing(rotateValues[index], {
+      toValue: 1, // Rotate to 10 degrees
+      duration: 500, // Animation duration
+      useNativeDriver: true, // Enable native driver
+    }).start();
+  };
 
   return (
     <ParallaxScrollView
@@ -56,40 +61,53 @@ export default function HomeScreen() {
         keyExtractor={(item) => item}
         horizontal
         ref={flatListRef}
-        //onViewableItemsChanged={onChange}
         showsHorizontalScrollIndicator={false}
-        viewabilityConfig={{
-          itemVisiblePercentThreshold: 50,
-          minimumViewTime: 200,
-        }}
         style={styles.container}
-        renderItem={({ item, index }) => (
-          <TouchableOpacity
-            onPress={() => {
-              //  setActive(index);
-              Haptics.selectionAsync();
-              // scrollToItem(index);
-            }}
-          >
-            <View style={active === index ? styles.pinActive : styles.pin}>
-              <Text
-                style={active === index ? styles.pinTextActive : styles.pinText}
+        renderItem={({ item, index }) => {
+          // Interpolate the rotateValue to map it to degrees
+          const rotateInterpolation = rotateValues[index].interpolate({
+            inputRange: [0, 1],
+            outputRange: ["0deg", "-10deg"], // Rotate from 0 to -10 degrees
+          });
+
+          return (
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.selectionAsync();
+                startRotation(index);
+              }}
+            >
+              <Animated.View
+                style={
+                  active === index
+                    ? [
+                      styles.pinActive,
+                      { transform: [{ rotate: rotateInterpolation }] }, // Apply rotation
+                    ]
+                    : styles.pin
+                }
               >
-                {item}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        )}
+                <Text
+                  style={active === index ? styles.pinTextActive : styles.pinText}
+                >
+                  {item}
+                </Text>
+              </Animated.View>
+            </TouchableOpacity>
+          );
+        }}
         onScroll={({ nativeEvent }) => {
           const offsetX = nativeEvent.contentOffset.x;
           const viewableItems = data.map((_, i) => {
             return {
               index: i,
-              isVisible: offsetX >= i * 44 && offsetX < (i + 1) * 44,
+              isVisible: offsetX > i * 44 && offsetX < (i + 1) * 44,
             };
           });
           const visibleItem = viewableItems.find((item) => item.isVisible);
           if (visibleItem) {
+            startRotation(visibleItem.index);
+            Haptics.selectionAsync();
             setActive(visibleItem.index);
           }
         }}
@@ -129,7 +147,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     borderRadius: 999,
     alignSelf: "flex-start",
-    transform: [{ rotate: "-10deg" }],
     marginLeft: 7,
   },
   pinTextActive: {
