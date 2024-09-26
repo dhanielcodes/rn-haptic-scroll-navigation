@@ -6,10 +6,11 @@ import {
   TouchableOpacity,
   View,
   Animated,
+  Dimensions,
 } from "react-native";
 import * as Haptics from "expo-haptics";
 import ParallaxScrollView from "@/components/ParallaxScrollView";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function HomeScreen() {
   const data = [
@@ -42,9 +43,20 @@ export default function HomeScreen() {
     Animated.timing(rotateValues[index], {
       toValue: 1, // Rotate to 10 degrees
       duration: 500, // Animation duration
+      delay: -5000,
       useNativeDriver: true, // Enable native driver
     }).start();
   };
+
+  const scrollToIndex = (index: number) => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToIndex({ index, animated: true });
+    }
+  };
+  useEffect(() => {
+    startRotation(0);
+    Haptics.selectionAsync();
+  }, []);
 
   return (
     <ParallaxScrollView
@@ -73,22 +85,24 @@ export default function HomeScreen() {
           return (
             <TouchableOpacity
               onPress={() => {
-                Haptics.selectionAsync();
                 startRotation(index);
+                scrollToIndex(index);
               }}
             >
               <Animated.View
                 style={
                   active === index
                     ? [
-                      styles.pinActive,
-                      { transform: [{ rotate: rotateInterpolation }] }, // Apply rotation
-                    ]
+                        styles.pinActive,
+                        { transform: [{ rotate: rotateInterpolation }] }, // Apply rotation
+                      ]
                     : styles.pin
                 }
               >
                 <Text
-                  style={active === index ? styles.pinTextActive : styles.pinText}
+                  style={
+                    active === index ? styles.pinTextActive : styles.pinText
+                  }
                 >
                   {item}
                 </Text>
