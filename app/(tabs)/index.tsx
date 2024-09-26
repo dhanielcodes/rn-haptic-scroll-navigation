@@ -83,12 +83,7 @@ export default function HomeScreen() {
           });
 
           return (
-            <TouchableOpacity
-              onPress={() => {
-                startRotation(index);
-                scrollToIndex(index);
-              }}
-            >
+            <TouchableOpacity>
               <Animated.View
                 style={
                   active === index
